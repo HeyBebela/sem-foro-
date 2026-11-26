@@ -1,0 +1,217 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Simulador do Semáforo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+:root {
+  --bg: #F1F4F7; --surface: #FFFFFF; --ink: #0E1B2C; --muted: #52627A; --line: #CCD6E0;
+  --off: #E6EBF0; --off-line: #AEB9C6; --edge: #3A4A60; --edge-on: #B45F00; --elabel: #33445A;
+  --g: #2F9E44; --y: #F4B942; --r: #E0453F; --lamp-off: #D5DCE3;
+  --gf: #86D39B; --yf: #F7D26B; --rf: #F2A09C; --gs: #1E7B3A; --ys: #A87900; --rs: #B3302B;
+  --on: #0F766E; --on-ink: #FFFFFF; --body-dark: #1B2638;
+  --btn: #0F766E; --btn-ink: #FFFFFF; --focus: #B45F00;
+  --head: "Space Grotesk", "Segoe UI", Arial, sans-serif;
+  --text: Inter, "Segoe UI", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0A1220; --surface: #111C2E; --ink: #E7EEF6; --muted: #9FB1C7; --line: #263650;
+    --off: #1B2A42; --off-line: #3B4D69; --edge: #9FB1C7; --edge-on: #F4B942; --elabel: #B8C7DA;
+    --g: #3DD16F; --y: #F4B942; --r: #FF6B63; --lamp-off: #243248;
+    --gf: #1F6B3B; --yf: #7A5B10; --rf: #8A3430; --gs: #3DD16F; --ys: #F4B942; --rs: #FF6B63;
+    --on: #2DD4BF; --on-ink: #06201E; --body-dark: #1B2638;
+    --btn: #2DD4BF; --btn-ink: #06201E; --focus: #F4B942; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0A1220; --surface: #111C2E; --ink: #E7EEF6; --muted: #9FB1C7; --line: #263650;
+  --off: #1B2A42; --off-line: #3B4D69; --edge: #9FB1C7; --edge-on: #F4B942; --elabel: #B8C7DA;
+  --g: #3DD16F; --y: #F4B942; --r: #FF6B63; --lamp-off: #243248;
+  --gf: #1F6B3B; --yf: #7A5B10; --rf: #8A3430; --gs: #3DD16F; --ys: #F4B942; --rs: #FF6B63;
+  --on: #2DD4BF; --on-ink: #06201E; --body-dark: #1B2638;
+  --btn: #2DD4BF; --btn-ink: #06201E; --focus: #F4B942; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--text); font-size: 16px; line-height: 1.5; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 48px; display: grid; gap: 20px; }
+.kicker { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 4px 0 6px; font-family: var(--head); font-size: clamp(1.7rem, 4vw, 2.4rem); line-height: 1.1; text-wrap: balance; }
+h2 { margin: 0 0 10px; font-family: var(--head); font-size: 1.15rem; }
+.lede { margin: 0; max-width: 68ch; color: var(--muted); }
+.top { display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: center; }
+.pole { background: var(--body-dark); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+.pole i { display: block; width: 44px; height: 44px; border-radius: 50%; background: var(--lamp-off); transition: background .2s, box-shadow .2s; }
+.pole i.g { background: var(--g); box-shadow: 0 0 16px var(--g); }
+.pole i.y { background: var(--y); box-shadow: 0 0 16px var(--y); }
+.pole i.r { background: var(--r); box-shadow: 0 0 16px var(--r); }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
+.btn { font: 600 15px var(--text); color: var(--ink); background: var(--surface); border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+.btn:hover { border-color: var(--on); }
+.btn.primary { background: var(--btn); color: var(--btn-ink); border-color: var(--btn); }
+.btn[aria-pressed="true"] { border-color: var(--on); box-shadow: inset 0 0 0 1px var(--on); }
+.btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+kbd { font-family: var(--mono); font-size: 13px; border: 1px solid var(--line); border-radius: 5px; padding: 0 6px; }
+.panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.panel, .box { background: var(--surface); border: 1.5px solid var(--line); border-radius: 16px; padding: 16px; min-width: 0; }
+.panel p.sub { margin: 0 0 6px; color: var(--muted); font-size: 14px; }
+svg { display: block; width: 100%; height: auto; }
+.edge { fill: none; stroke: var(--edge); stroke-width: 2.4; stroke-linecap: round; }
+.edge.on { stroke: var(--edge-on); stroke-width: 4; }
+.ah { fill: var(--edge); } .ah.on { fill: var(--edge-on); }
+.node circle { fill: var(--off); stroke: var(--off-line); stroke-width: 2.5; }
+.node.on circle { stroke-width: 4; }
+.mo .node.s0.on circle { fill: var(--gf); stroke: var(--gs); }
+.mo .node.s1.on circle { fill: var(--yf); stroke: var(--ys); }
+.mo .node.s2.on circle { fill: var(--rf); stroke: var(--rs); }
+.me .node.on circle { fill: var(--on); stroke: var(--on); }
+.me .node.on text { fill: var(--on-ink); }
+.nm { font: 700 15px var(--text); text-anchor: middle; fill: var(--ink); }
+.cp { font: 500 13px var(--text); text-anchor: middle; fill: var(--muted); }
+.lb { font: 600 13px var(--text); text-anchor: middle; fill: var(--elabel); }
+.lb.on { fill: var(--edge-on); font-weight: 700; }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; }
+.chip { font-weight: 700; padding: 3px 14px; border-radius: 999px; background: var(--off); }
+.chip.g { background: var(--g); color: #fff; } .chip.y { background: var(--y); color: #2B1B00; } .chip.r { background: var(--r); color: #fff; }
+.chip.cmd { background: var(--on); color: var(--on-ink); }
+.bits { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.bit { font-family: var(--mono); font-size: 22px; min-width: 42px; text-align: center; border: 1.5px solid var(--line); border-radius: 10px; padding: 2px 8px; }
+.tw { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 520px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 600; font-size: 13px; }
+tr.last td { font-weight: 600; background: color-mix(in srgb, var(--on) 12%, transparent); }
+.eqs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.eqs p { margin: 2px 0; font-family: var(--mono); font-size: 14px; overflow-wrap: anywhere; }
+.note { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+@media (max-width: 760px) { .top { grid-template-columns: 1fr; } .pole { grid-auto-flow: column; justify-self: start; } .panels, .eqs { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .pole i { transition: none; } }
+</style>
+<div class="wrap">
+  <header class="top">
+    <div class="pole" aria-hidden="true"><i id="pr"></i><i id="py"></i><i id="pg"></i></div>
+    <div>
+      <p class="kicker">Arquitetura e Organização de Computadores</p>
+      <h1>Simulador do semáforo</h1>
+      <p class="lede">Uma máquina de estados com três estados e uma entrada, <b>T</b> (o temporizador terminou). A Moore mostra a luz acesa; a Mealy mostra o comando que sai na seta.</p>
+      <div class="controls">
+        <button class="btn primary" id="tick">Passar o tempo (T)</button>
+        <button class="btn" id="auto" aria-pressed="false">Automático</button>
+        <button class="btn" id="reset">Reiniciar</button>
+        <span class="note" style="margin:0">Atalho: tecla <kbd>T</kbd></span>
+      </div>
+    </div>
+  </header>
+
+  <div class="panels">
+    <section class="panel mo" aria-labelledby="hm">
+      <h2 id="hm">Moore: a luz está no estado</h2>
+      <p class="sub">Saída = função do estado atual.</p>
+      <svg viewBox="0 0 480 230" role="img" aria-label="Máquina de Moore do semáforo: VERDE, AMARELO e VERMELHO">
+        <path class="edge" data-e="0" d="M112 90 L168 90"/><polygon class="ah" data-e="0" points="176,90 164,84 164,96"/>
+        <path class="edge" data-e="1" d="M272 90 L328 90"/><polygon class="ah" data-e="1" points="336,90 324,84 324,96"/>
+        <path class="edge" data-e="2" d="M392 142 C340 225 140 225 88 142"/><polygon class="ah" data-e="2" points="88,142 91,155 100,148"/>
+        <text class="lb" data-e="0" x="140" y="78">T</text><text class="lb" data-e="1" x="300" y="78">T</text><text class="lb" data-e="2" x="240" y="224">T</text>
+        <g class="node s0" data-s="0"><circle cx="70" cy="90" r="46"/><text class="nm" x="70" y="88">VERDE</text><text class="cp" x="70" y="106">luz verde</text></g>
+        <g class="node s1" data-s="1"><circle cx="224" cy="90" r="46"/><text class="nm" x="224" y="88">AMARELO</text><text class="cp" x="224" y="106">luz amarela</text></g>
+        <g class="node s2" data-s="2"><circle cx="410" cy="90" r="46" transform="translate(-10 0)"/><text class="nm" x="400" y="88">VERMELHO</text><text class="cp" x="400" y="106">luz vermelha</text></g>
+      </svg>
+      <div class="chips"><span>Luz acesa</span><span class="chip" id="mchip">verde</span></div>
+    </section>
+
+    <section class="panel me" aria-labelledby="he">
+      <h2 id="he">Mealy: o comando está na seta</h2>
+      <p class="sub">Saída = função do estado e da entrada.</p>
+      <svg viewBox="0 0 480 230" role="img" aria-label="Máquina de Mealy do semáforo: as setas T carregam os comandos liga amarelo, liga vermelho e liga verde">
+        <path class="edge" data-e="0" d="M108 90 L158 90"/><polygon class="ah" data-e="0" points="166,90 154,84 154,96"/>
+        <path class="edge" data-e="1" d="M262 90 L312 90"/><polygon class="ah" data-e="1" points="320,90 308,84 308,96"/>
+        <path class="edge" data-e="2" d="M386 136 C340 218 140 218 94 136"/><polygon class="ah" data-e="2" points="94,136 96,149 106,142"/>
+        <text class="lb" data-e="0" x="133" y="60">T/liga</text><text class="lb" data-e="0" x="133" y="76">amarelo</text>
+        <text class="lb" data-e="1" x="287" y="60">T/liga</text><text class="lb" data-e="1" x="287" y="76">vermelho</text>
+        <text class="lb" data-e="2" x="240" y="224">T/liga verde</text>
+        <g class="node s0" data-s="0"><circle cx="64" cy="90" r="44"/><text class="nm" x="64" y="94">VERDE</text></g>
+        <g class="node s1" data-s="1"><circle cx="214" cy="90" r="44"/><text class="nm" x="214" y="94">AMARELO</text></g>
+        <g class="node s2" data-s="2"><circle cx="400" cy="90" r="44" transform="translate(-14 0)"/><text class="nm" x="386" y="94">VERMELHO</text></g>
+      </svg>
+      <div class="chips"><span>Último comando</span><span class="chip" id="cchip">nenhum</span></div>
+    </section>
+  </div>
+
+  <section class="box" aria-labelledby="hf">
+    <h2 id="hf">No circuito: dois flip-flops D</h2>
+    <div class="bits"><span>a</span><span class="bit" id="ba">0</span><span>b</span><span class="bit" id="bb">0</span><span id="bn" class="note" style="margin:0 0 0 8px"></span></div>
+    <p class="note">VERDE = 00, AMARELO = 01, VERMELHO = 10. O estado 11 nunca é usado.</p>
+  </section>
+
+  <section class="box" aria-labelledby="hl">
+    <h2 id="hl">Passo a passo</h2>
+    <div class="tw"><table>
+      <thead><tr><th>Passo</th><th>Entrada</th><th>Moore (estado, luz)</th><th>Mealy (estado, comando)</th></tr></thead>
+      <tbody id="log"></tbody>
+    </table></div>
+  </section>
+
+  <section class="box" aria-labelledby="hq">
+    <h2 id="hq">Equações do circuito</h2>
+    <div class="eqs">
+      <div><p class="note" style="margin:0 0 4px">Próximo estado (igual nas duas)</p><p>Da = T'.a + T.b</p><p>Db = T'.b + T.a'.b'</p></div>
+      <div><p class="note" style="margin:0 0 4px">Moore: luz</p><p>verde = a'.b'</p><p>amarelo = b</p><p>vermelho = a</p></div>
+      <div><p class="note" style="margin:0 0 4px">Mealy: comando</p><p>liga amarelo = T.a'.b'</p><p>liga vermelho = T.b</p><p>liga verde = T.a</p></div>
+    </div>
+  </section>
+</div>
+<script>
+(function () {
+  var NAMES = ['VERDE', 'AMARELO', 'VERMELHO'], LUZ = ['verde', 'amarelo', 'vermelho'], CLS = ['g', 'y', 'r'];
+  var CMD = ['liga amarelo', 'liga vermelho', 'liga verde'], BITS = [[0, 0], [0, 1], [1, 0]];
+  var st, step, timer, rows;
+  var $ = function (id) { return document.getElementById(id); };
+  function setOn(sel, test) {
+    var els = document.querySelectorAll(sel), k;
+    for (k = 0; k < els.length; k++) els[k].classList.toggle('on', test(els[k]));
+  }
+  function paint(edge) {
+    setOn('[data-s]', function (e) { return +e.getAttribute('data-s') === st; });
+    setOn('[data-e]', function (e) { return edge !== null && +e.getAttribute('data-e') === edge; });
+    var c = CLS[st];
+    $('pr').className = c === 'r' ? 'r' : ''; $('py').className = c === 'y' ? 'y' : ''; $('pg').className = c === 'g' ? 'g' : '';
+    $('mchip').className = 'chip ' + c; $('mchip').textContent = LUZ[st];
+    $('ba').textContent = BITS[st][0]; $('bb').textContent = BITS[st][1];
+    $('bn').textContent = '= ' + NAMES[st];
+  }
+  function render() {
+    var out = '', k, r;
+    for (k = 0; k < rows.length; k++) {
+      r = rows[k];
+      out += '<tr' + (k === rows.length - 1 ? ' class="last"' : '') + '><td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + ', ' + r[3] + '</td><td>' + r[2] + ', ' + r[4] + '</td></tr>';
+    }
+    $('log').innerHTML = out;
+  }
+  function reset() {
+    st = 0; step = 0; rows = [[0, '-', 'VERDE', 'verde', '-']];
+    $('cchip').className = 'chip'; $('cchip').textContent = 'nenhum';
+    paint(null); render();
+  }
+  function tick() {
+    var from = st; st = (st + 1) % 3; step++;
+    rows.push([step, 'T', NAMES[st], LUZ[st], CMD[from]]);
+    if (rows.length > 13) rows.splice(1, 1);
+    $('cchip').className = 'chip cmd'; $('cchip').textContent = CMD[from];
+    paint(from); render();
+  }
+  function setAuto(on) {
+    clearInterval(timer); timer = null;
+    if (on) timer = setInterval(tick, 1500);
+    $('auto').setAttribute('aria-pressed', on ? 'true' : 'false');
+    $('auto').textContent = on ? 'Parar automático' : 'Automático';
+  }
+  $('tick').addEventListener('click', tick);
+  $('reset').addEventListener('click', function () { setAuto(false); reset(); });
+  $('auto').addEventListener('click', function () { setAuto(!timer); });
+  document.addEventListener('keydown', function (e) {
+    if ((e.key === 't' || e.key === 'T') && !e.ctrlKey && !e.metaKey && !e.altKey) tick();
+  });
+  reset(); tick(); tick(); tick(); tick();
+})();
+</script>
+
+</body></html>
